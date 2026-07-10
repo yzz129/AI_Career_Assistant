@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { myApplies, reviewApply, todoApplies } from '../api'
 import { useAuthStore } from '../store/auth'
 
@@ -43,6 +43,7 @@ async function load() {
 async function review(row, status) {
   const { value } = await ElMessageBox.prompt('填写审核意见', status === 'APPROVED' ? '通过申请' : '驳回申请')
   await reviewApply({ applyId: row.id, status, reviewComment: value })
-  load()
+  ElMessage.success(status === 'APPROVED' ? '申请已通过' : '申请已驳回')
+  await load()
 }
 </script>

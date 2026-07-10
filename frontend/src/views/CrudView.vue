@@ -35,7 +35,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { createApi, deleteApi, pageApi, updateApi } from '../api'
 import { useAuthStore } from '../store/auth'
 
@@ -116,15 +116,19 @@ function openEdit(row) {
 }
 
 async function save() {
+  const required = config.value.fields[0]
+  if (!String(form[required.prop] || '').trim()) return ElMessage.warning(`请填写${required.label}`)
   if (form.id) await updateApi(config.value.base, form.id, form)
   else await createApi(config.value.base, form)
   dialogVisible.value = false
-  load()
+  ElMessage.success(form.id ? '修改成功' : '新增成功')
+  await load()
 }
 
 async function remove(row) {
   await ElMessageBox.confirm('确认删除这条记录吗？')
   await deleteApi(config.value.base, row.id)
-  load()
+  ElMessage.success('删除成功')
+  await load()
 }
 </script>

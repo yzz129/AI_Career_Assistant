@@ -9,7 +9,7 @@
     </div>
 
     <div class="job-grid" v-loading="loading">
-      <article v-for="job in rows" :key="job.id" class="job-card">
+      <article v-for="job in rows" :key="job.id" class="job-card" :data-job-id="job.id">
         <div class="job-card-head">
           <span>{{ job.city || '远程友好' }}</span>
           <strong>{{ job.salaryRange || '面议' }}</strong>
@@ -49,12 +49,14 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createApi, deleteApi, pageApi, submitApply, updateApi } from '../api'
 import { useAuthStore } from '../store/auth'
 
 const auth = useAuthStore()
+const route = useRoute()
 const loading = ref(false)
 const rows = ref([])
 const dialogVisible = ref(false)
@@ -72,6 +74,10 @@ async function load() {
   try {
     const data = await pageApi('/jobs', { pageNum: 1, pageSize: 30, ...query })
     rows.value = data.records || []
+    if (route.query.jobId) {
+      await nextTick()
+      document.querySelector(`[data-job-id="${route.query.jobId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
   } finally {
     loading.value = false
   }
@@ -84,20 +90,28 @@ function open(row) {
 }
 
 async function save() {
+  if (!String(form.companyId || '').trim()) return ElMessage.warning('请填写企业 ID')
+  if (!String(form.title || '').trim()) return ElMessage.warning('请填写岗位名称')
   if (form.id) await updateApi('/jobs', form.id, form)
   else await createApi('/jobs', form)
   dialogVisible.value = false
-  load()
+  ElMessage.success(form.id ? '岗位修改成功' : '岗位新增成功')
+  await load()
 }
 
 async function remove(row) {
   await ElMessageBox.confirm('确认删除岗位吗？')
   await deleteApi('/jobs', row.id)
-  load()
+  ElMessage.success('岗位已删除')
+  await load()
 }
 
 async function apply(job) {
-  await submitApply({ jobId: job.id, reason: `我希望申请 ${job.title}，并将课程项目能力用于真实实习场景。` })
+  const { value } = await ElMessageBox.prompt('请简要说明你的申请理由', `申请 ${job.title}`, {
+    inputValue: `我希望申请 ${job.title}，并将课程与项目能力用于真实实习场景。`,
+    inputValidator: (text) => text?.trim().length >= 10 || '申请理由至少填写 10 个字'
+  })
+  await submitApply({ jobId: job.id, reason: value.trim() })
   ElMessage.success('申请已提交，等待老师审核')
 }
 </script>

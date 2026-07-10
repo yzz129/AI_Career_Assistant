@@ -1,7 +1,7 @@
 <template>
   <section class="ai-workspace">
     <aside class="ai-tools">
-      <button v-for="tool in tools" :key="tool.key" :class="{ active: active === tool.key }" @click="active = tool.key">
+      <button v-for="tool in availableTools" :key="tool.key" :class="{ active: active === tool.key }" @click="selectTool(tool.key)">
         <strong>{{ tool.title }}</strong>
         <span>{{ tool.desc }}</span>
       </button>
@@ -31,13 +31,15 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '../utils/request'
 import { useAuthStore } from '../store/auth'
 
 const auth = useAuthStore()
-const active = ref('resume')
+const route = useRoute()
+const active = ref(auth.role === 'STUDENT' ? 'resume' : 'interview')
 const streaming = ref(false)
 const answerText = ref('')
 const question = ref('实习申请流程是什么？')
@@ -51,9 +53,28 @@ const tools = [
   { key: 'interview', title: '模拟面试', desc: '获得回答点评' },
   { key: 'kb', title: '知识库问答', desc: '查询校内流程制度' }
 ]
-const current = computed(() => tools.find((tool) => tool.key === active.value))
+const availableTools = computed(() => tools.filter((tool) => auth.role === 'STUDENT' || !['resume', 'job'].includes(tool.key)))
+const current = computed(() => tools.find((tool) => tool.key === active.value) || availableTools.value[0])
+
+onMounted(() => {
+  const requested = String(route.query.tool || '')
+  if (availableTools.value.some((tool) => tool.key === requested)) active.value = requested
+  const savedQuestion = sessionStorage.getItem('internai_ai_question')
+  if (savedQuestion) {
+    question.value = savedQuestion
+    active.value = 'kb'
+    sessionStorage.removeItem('internai_ai_question')
+  }
+})
+
+function selectTool(key) {
+  active.value = key
+  answerText.value = ''
+}
 
 async function run() {
+  if (active.value === 'kb' && !question.value.trim()) return ElMessage.warning('请输入问题')
+  if (active.value === 'interview' && !answer.value.trim()) return ElMessage.warning('请输入面试回答')
   answerText.value = ''
   streaming.value = true
   try {

@@ -16,6 +16,11 @@
         </RouterLink>
       </nav>
 
+      <button class="logout-button" type="button" @click="logout">
+        <SwitchButton />
+        <span>退出登录</span>
+      </button>
+
       <div class="sidebar-note">
         <div class="tiny-mascot sidebar-mascot">
           <span class="sprout"></span>
@@ -53,6 +58,7 @@ import {
   Notebook,
   OfficeBuilding,
   StarFilled,
+  SwitchButton,
   User,
   UserFilled
 } from '@element-plus/icons-vue'
@@ -61,7 +67,9 @@ const auth = useAuthStore()
 
 const menus = [
   { path: '/dashboard', label: '岗位中心', icon: Briefcase, roles: ['ADMIN', 'TEACHER', 'STUDENT'] },
+  { path: '/jobs', label: '岗位列表', icon: Briefcase, roles: ['ADMIN', 'TEACHER', 'STUDENT'] },
   { path: '/applies', label: auth.role === 'TEACHER' ? '申请审核' : '我的申请', icon: Document, roles: ['TEACHER', 'STUDENT'] },
+  { path: '/logs', label: auth.role === 'TEACHER' ? '日志点评' : '实习日志', icon: EditPen, roles: ['TEACHER', 'STUDENT'] },
   { path: '/ai', label: 'AI 助手', icon: ChatDotRound, roles: ['ADMIN', 'TEACHER', 'STUDENT'] },
   { path: '/resume', label: '简历优化', icon: DocumentChecked, roles: ['STUDENT'] },
   { path: '/knowledge', label: '知识库问答', icon: Collection, roles: ['ADMIN', 'STUDENT'] },
@@ -72,4 +80,9 @@ const menus = [
 ]
 
 const visibleMenus = computed(() => menus.filter((item) => item.roles.includes(auth.role)))
+
+function logout() {
+  auth.logout()
+  window.location.href = '/login'
+}
 </script>

@@ -25,7 +25,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { commentLog, myLogs, saveLog, todoLogs } from '../api'
 import { useAuthStore } from '../store/auth'
 
@@ -46,14 +46,17 @@ async function load() {
 }
 
 async function save() {
+  if (!form.content.trim()) return ElMessage.warning('请填写日志内容')
   await saveLog(form)
   form.content = ''
-  load()
+  ElMessage.success('日志已保存')
+  await load()
 }
 
 async function comment(row) {
   const { value } = await ElMessageBox.prompt('写下给学生的温柔点评', '日志点评')
   await commentLog({ logId: row.id, teacherComment: value })
-  load()
+  ElMessage.success('点评已提交')
+  await load()
 }
 </script>

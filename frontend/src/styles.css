@@ -147,6 +147,38 @@ a {
   color: #131b31;
 }
 
+.logout-button {
+  margin: 12px 14px 0;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #68738a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.logout-button svg { width: 18px; }
+
+.clickable { cursor: pointer; }
+
+.bookmark-button {
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.bookmark-button .favorited {
+  color: #ffb52e;
+  fill: #ffda72;
+}
+
 .nav-item.router-link-active {
   color: #1d2437;
   background: linear-gradient(100deg, #ffe5e2 0%, #fff0ef 100%);

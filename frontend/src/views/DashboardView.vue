@@ -20,16 +20,16 @@
         </div>
 
         <div class="header-actions">
-          <button class="season-btn">
+          <button class="season-btn" @click="showSeason">
             <Calendar />
             {{ overview.profile.season }}
             <ArrowRight />
           </button>
-          <button class="bell-btn">
+          <button class="bell-btn" @click="showNotifications">
             <Bell />
             <b>{{ overview.profile.notificationCount || 0 }}</b>
           </button>
-          <div class="profile">
+          <div class="profile" role="button" tabindex="0" @click="showProfile" @keyup.enter="showProfile">
             <div class="avatar">{{ overview.profile.avatarText || 'AI' }}</div>
             <div>
               <strong>{{ overview.profile.realName }}</strong>
@@ -41,7 +41,7 @@
       </header>
 
       <section class="stats-grid" v-loading="loading">
-        <article v-for="item in displayStats" :key="item.key" class="stat-card">
+        <article v-for="item in displayStats" :key="item.key" class="stat-card clickable" @click="openStat(item.key)">
           <div class="stat-icon" :class="item.color">
             <component :is="item.icon" />
           </div>
@@ -59,7 +59,7 @@
           <button @click="$router.push('/jobs')">查看全部 <ArrowRight /></button>
         </div>
         <div v-if="overview.jobs.length" class="job-row">
-          <article v-for="job in overview.jobs" :key="job.id || job.title" class="reference-job-card">
+          <article v-for="job in overview.jobs" :key="job.id || job.title" class="reference-job-card clickable" @click="openJob(job)">
             <div class="company-logo" :class="job.logoClass">{{ job.logo }}</div>
             <h3>{{ job.company }}</h3>
             <strong>{{ job.title }}</strong>
@@ -69,7 +69,9 @@
             </div>
             <footer>
               <span>{{ job.match }} <small>匹配</small></span>
-              <CollectionTag />
+              <button class="bookmark-button" :aria-label="isFavorite(job) ? '取消收藏' : '收藏岗位'" @click.stop="toggleFavorite(job)">
+                <CollectionTag :class="{ favorited: isFavorite(job) }" />
+              </button>
             </footer>
           </article>
         </div>
@@ -118,7 +120,7 @@
                 <Check /> {{ suggestion.text }}
                 <em :class="suggestion.type">{{ suggestion.level }}</em>
               </div>
-              <button @click="$router.push('/resume')">立即优化</button>
+              <button @click="openResumeTool">立即优化</button>
             </div>
             <div class="resume-illustration">
               <DocumentChecked />
@@ -130,10 +132,10 @@
         <article class="glass-section kb-card">
           <div class="section-title">
             <h2><i>▣</i> 知识库问答</h2>
-            <button @click="$router.push('/knowledge')">更多问题 <ArrowRight /></button>
+            <button @click="openKnowledge">更多问题 <ArrowRight /></button>
           </div>
           <ul>
-            <li v-for="question in overview.knowledge.questions" :key="question">{{ question }}</li>
+            <li v-for="question in overview.knowledge.questions" :key="question" class="clickable" @click="askQuestion(question)">{{ question }}</li>
           </ul>
           <div class="kb-illustration">
             <Collection />
@@ -166,12 +168,12 @@
       </div>
 
       <div class="quick-questions">
-        <button v-for="question in overview.assistant.quickQuestions" :key="question">{{ question }}</button>
+        <button v-for="question in overview.assistant.quickQuestions" :key="question" @click="askQuestion(question)">{{ question }}</button>
       </div>
 
       <div class="chat-input">
-        <input placeholder="输入你的问题..." />
-        <button @click="$router.push('/ai')"><Promotion /></button>
+        <input v-model="chatQuestion" placeholder="输入你的问题..." @keyup.enter="sendQuestion" />
+        <button aria-label="发送问题" @click="sendQuestion"><Promotion /></button>
       </div>
       <p class="ai-tip">内容由 AI 生成，仅供参考</p>
     </aside>
@@ -180,6 +182,8 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowDown,
   ArrowRight,
@@ -198,9 +202,69 @@ import {
   UserFilled
 } from '@element-plus/icons-vue'
 import { dashboardOverview } from '../api'
+import { useAuthStore } from '../store/auth'
 
 const loading = ref(false)
 const overview = ref(emptyOverview())
+const router = useRouter()
+const auth = useAuthStore()
+const chatQuestion = ref('')
+const favorites = ref(JSON.parse(localStorage.getItem('internai_favorites') || '[]'))
+
+function openStat(key) {
+  const routes = {
+    jobs: '/jobs',
+    apply: auth.role === 'ADMIN' ? '/jobs' : '/applies',
+    interview: auth.role === 'ADMIN' ? '/ai' : '/applies',
+    match: auth.role === 'STUDENT' ? '/resume' : '/ai'
+  }
+  router.push(routes[key] || '/dashboard')
+}
+
+function openResumeTool() {
+  router.push(auth.role === 'STUDENT' ? '/resume' : { path: '/ai', query: { tool: 'interview' } })
+}
+
+function openKnowledge() {
+  router.push(auth.role === 'TEACHER' ? { path: '/ai', query: { tool: 'kb' } } : '/knowledge')
+}
+
+function openJob(job) {
+  router.push({ path: '/jobs', query: { jobId: job.id } })
+}
+
+function isFavorite(job) {
+  return favorites.value.includes(job.id)
+}
+
+function toggleFavorite(job) {
+  favorites.value = isFavorite(job) ? favorites.value.filter((id) => id !== job.id) : [...favorites.value, job.id]
+  localStorage.setItem('internai_favorites', JSON.stringify(favorites.value))
+  ElMessage.success(isFavorite(job) ? '岗位已收藏' : '已取消收藏')
+}
+
+function askQuestion(question) {
+  sessionStorage.setItem('internai_ai_question', question)
+  router.push({ path: '/ai', query: { tool: 'kb' } })
+}
+
+function sendQuestion() {
+  const value = chatQuestion.value.trim()
+  if (!value) return ElMessage.warning('请输入问题')
+  askQuestion(value)
+}
+
+function showSeason() {
+  ElMessageBox.alert('当前为 2026 春招季，建议优先完善简历并关注开放岗位。', '招聘日历')
+}
+
+function showNotifications() {
+  router.push('/applies')
+}
+
+function showProfile() {
+  ElMessageBox.alert(`${overview.value.profile.realName}\n${overview.value.profile.major}`, '个人信息')
+}
 
 const statIcons = {
   jobs: Briefcase,

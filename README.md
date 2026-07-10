@@ -37,7 +37,7 @@ mysql -uroot -proot < sql/init.sql
 mvn spring-boot:run
 ```
 
-后端地址：`http://localhost:8080`
+后端地址：`http://localhost:8088`
 
 也可以先打包：
 
@@ -54,7 +54,7 @@ npm install
 npm run dev
 ```
 
-前端地址：`http://localhost:5173`
+前端地址：`http://localhost:3000`
 
 生产构建：
 

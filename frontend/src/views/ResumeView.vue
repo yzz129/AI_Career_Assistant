@@ -30,6 +30,8 @@ async function init() {
 }
 
 async function save() {
+  if (!resume.title.trim()) return ElMessage.warning('请填写简历标题')
+  if (resume.content.trim().length < 20) return ElMessage.warning('简历内容至少填写 20 个字')
   const data = await saveResume(resume)
   Object.assign(resume, data)
   ElMessage.success('简历已保存')

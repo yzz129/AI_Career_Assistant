@@ -36,5 +36,14 @@ build/
 ### VS Code ###
 .vscode/
 
+### Runtime ###
+*.out.log
+*.err.log
+*-run.log
+mysql-data/
+mysql.zip
+apache-maven.zip
+tools/
+
 ### Mac OS ###
 .DS_Store
