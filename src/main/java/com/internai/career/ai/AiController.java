@@ -17,27 +17,28 @@ public class AiController {
     }
 
     @GetMapping(value = "/resume/optimize", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> resumeOptimize(@RequestParam Long resumeId) {
+    public Flux<String> resumeOptimize(@RequestParam(name = "resumeId") Long resumeId) {
         return aiService.resumeOptimize(resumeId);
     }
 
     @GetMapping(value = "/job/recommend", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> jobRecommend(@RequestParam Long studentId) {
+    public Flux<String> jobRecommend(@RequestParam(name = "studentId") Long studentId) {
         return aiService.jobRecommend(studentId);
     }
 
     @GetMapping(value = "/interview", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> interview(@RequestParam(required = false) Long jobId, @RequestParam(defaultValue = "") String answer) {
+    public Flux<String> interview(@RequestParam(name = "jobId", required = false) Long jobId,
+                                  @RequestParam(name = "answer", defaultValue = "") String answer) {
         return aiService.interview(jobId, answer);
     }
 
     @GetMapping(value = "/log/summary", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> logSummary(@RequestParam Long studentId) {
+    public Flux<String> logSummary(@RequestParam(name = "studentId") Long studentId) {
         return aiService.logSummary(studentId);
     }
 
     @GetMapping(value = "/kb/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> kbChat(@RequestParam String question) {
+    public Flux<String> kbChat(@RequestParam(name = "question") String question) {
         return aiService.kbChat(question);
     }
 }

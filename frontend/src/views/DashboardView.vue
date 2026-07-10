@@ -1,9 +1,29 @@
 <template>
   <div class="reference-dashboard">
+    <div class="header-actions dashboard-header-actions">
+      <button class="season-btn" @click="showSeason">
+        <Calendar />
+        {{ overview.profile.season }}
+        <ArrowRight />
+      </button>
+      <button class="bell-btn" @click="showNotifications">
+        <Bell />
+        <b v-if="overview.profile.notificationCount">{{ overview.profile.notificationCount }}</b>
+      </button>
+      <div class="profile" role="button" tabindex="0" @click="showProfile" @keyup.enter="showProfile">
+        <div class="avatar"><UserFilled /></div>
+        <div>
+          <strong>{{ overview.profile.realName }}</strong>
+          <span>{{ overview.profile.major }}</span>
+        </div>
+        <ArrowDown />
+      </div>
+    </div>
+
     <section class="dashboard-center">
       <header class="reference-header">
         <div class="greeting-block">
-          <h1>{{ overview.profile.greeting || '早上好' }} <span>👋</span></h1>
+          <h1>{{ overview.profile.greeting || '早上好' }} <Sunny class="greeting-icon" /></h1>
           <p>{{ overview.profile.subtitle }}</p>
         </div>
 
@@ -15,29 +35,10 @@
             <span class="face blush-left"></span>
             <span class="face blush-right"></span>
           </div>
-          <i class="star star-a">✦</i>
-          <i class="star star-b">✦</i>
+          <StarFilled class="star star-a" />
+          <StarFilled class="star star-b" />
         </div>
 
-        <div class="header-actions">
-          <button class="season-btn" @click="showSeason">
-            <Calendar />
-            {{ overview.profile.season }}
-            <ArrowRight />
-          </button>
-          <button class="bell-btn" @click="showNotifications">
-            <Bell />
-            <b>{{ overview.profile.notificationCount || 0 }}</b>
-          </button>
-          <div class="profile" role="button" tabindex="0" @click="showProfile" @keyup.enter="showProfile">
-            <div class="avatar">{{ overview.profile.avatarText || 'AI' }}</div>
-            <div>
-              <strong>{{ overview.profile.realName }}</strong>
-              <span>{{ overview.profile.major }}</span>
-            </div>
-            <ArrowDown />
-          </div>
-        </div>
       </header>
 
       <section class="stats-grid" v-loading="loading">
@@ -55,23 +56,33 @@
 
       <section class="glass-section jobs-section">
         <div class="section-title">
-          <h2><i>♟</i> 热门推荐岗位 <span>✦</span></h2>
+          <h2><Briefcase class="section-icon" /> 热门推荐岗位</h2>
           <button @click="$router.push('/jobs')">查看全部 <ArrowRight /></button>
         </div>
         <div v-if="overview.jobs.length" class="job-row">
           <article v-for="job in overview.jobs" :key="job.id || job.title" class="reference-job-card clickable" @click="openJob(job)">
-            <div class="company-logo" :class="job.logoClass">{{ job.logo }}</div>
+            <div class="company-logo" :class="job.logoClass"><OfficeBuilding /></div>
             <h3>{{ job.company }}</h3>
             <strong>{{ job.title }}</strong>
-            <p>{{ job.city }} · 实习</p>
+            <p>{{ job.city }} · {{ job.salaryRange }}</p>
             <div class="tag-row">
               <em v-for="tag in job.tags" :key="tag">{{ tag }}</em>
             </div>
             <footer>
               <span>{{ job.match }} <small>匹配</small></span>
-              <button class="bookmark-button" :aria-label="isFavorite(job) ? '取消收藏' : '收藏岗位'" @click.stop="toggleFavorite(job)">
-                <CollectionTag :class="{ favorited: isFavorite(job) }" />
-              </button>
+              <div class="job-card-actions">
+                <button
+                  v-if="job.sourceUrl"
+                  class="source-badge"
+                  :title="job.sourceCheckedAt ? `${job.sourceCheckedAt} 核验` : '查看岗位来源'"
+                  @click.stop="openSource(job)"
+                >
+                  <Link /> {{ job.sourceName }}
+                </button>
+                <button class="bookmark-button" :aria-label="isFavorite(job) ? '取消收藏' : '收藏岗位'" @click.stop="toggleFavorite(job)">
+                  <CollectionTag :class="{ favorited: isFavorite(job) }" />
+                </button>
+              </div>
             </footer>
           </article>
         </div>
@@ -79,7 +90,7 @@
       </section>
 
       <section class="glass-section process-section">
-        <h2><i>▣</i> 我的申请流程</h2>
+        <h2><Promotion class="section-icon" /> 我的申请流程</h2>
         <div class="process-content">
           <div class="process-line">
             <div v-for="step in displayProcess" :key="step.label" class="process-step">
@@ -92,7 +103,7 @@
           </div>
           <article class="current-card">
             <div class="current-top">
-              <div class="small-logo">AI</div>
+              <div class="small-logo"><OfficeBuilding /></div>
               <span>{{ overview.process.current.badge }}</span>
             </div>
             <h3>{{ overview.process.current.companyName }}</h3>
@@ -108,7 +119,7 @@
 
       <section class="bottom-grid">
         <article class="glass-section resume-card">
-          <h2><i>▣</i> 简历优化建议 <span>✦</span></h2>
+          <h2><DocumentChecked class="section-icon" /> 简历优化建议</h2>
           <div class="resume-content">
             <div class="score-ring">
               <strong>{{ overview.resume.score }}</strong>
@@ -124,14 +135,14 @@
             </div>
             <div class="resume-illustration">
               <DocumentChecked />
-              <i>★</i>
+              <MagicStick class="magic-icon" />
             </div>
           </div>
         </article>
 
         <article class="glass-section kb-card">
           <div class="section-title">
-            <h2><i>▣</i> 知识库问答</h2>
+            <h2><Collection class="section-icon" /> 知识库问答</h2>
             <button @click="openKnowledge">更多问题 <ArrowRight /></button>
           </div>
           <ul>
@@ -139,7 +150,7 @@
           </ul>
           <div class="kb-illustration">
             <Collection />
-            <span>AI</span>
+            <Service class="kb-ai-icon" />
           </div>
         </article>
       </section>
@@ -147,7 +158,7 @@
 
     <aside class="ai-panel">
       <div class="ai-panel-header">
-        <div class="robot-avatar">🤖</div>
+        <div class="robot-avatar"><Service /></div>
         <h2>AI 助手</h2>
         <span><i></i> 在线</span>
       </div>
@@ -158,7 +169,7 @@
           :key="`${message.role}-${message.time}-${message.content}`"
           :class="message.role === 'user' ? 'user-message' : 'assistant-message'"
         >
-          <div v-if="message.role !== 'user'" class="robot-avatar small">🤖</div>
+          <div v-if="message.role !== 'user'" class="robot-avatar small"><Service /></div>
           <p>{{ message.content }}</p>
           <time>{{ message.time }}</time>
           <button v-if="message.showRecommendButton" @click="$router.push('/jobs')">
@@ -197,8 +208,13 @@ import {
   Document,
   DocumentChecked,
   Finished,
+  Link,
+  MagicStick,
+  OfficeBuilding,
   Promotion,
+  Service,
   StarFilled,
+  Sunny,
   UserFilled
 } from '@element-plus/icons-vue'
 import { dashboardOverview } from '../api'
@@ -233,6 +249,11 @@ function openJob(job) {
   router.push({ path: '/jobs', query: { jobId: job.id } })
 }
 
+function openSource(job) {
+  if (!job.sourceUrl) return
+  window.open(job.sourceUrl, '_blank', 'noopener,noreferrer')
+}
+
 function isFavorite(job) {
   return favorites.value.includes(job.id)
 }
@@ -255,7 +276,7 @@ function sendQuestion() {
 }
 
 function showSeason() {
-  ElMessageBox.alert('当前为 2026 春招季，建议优先完善简历并关注开放岗位。', '招聘日历')
+  ElMessageBox.alert('当前为 2026 秋招季，建议优先完善简历并关注开放岗位。', '招聘日历')
 }
 
 function showNotifications() {
@@ -339,8 +360,7 @@ function emptyOverview() {
       realName: '',
       major: '',
       season: '',
-      notificationCount: 0,
-      avatarText: 'AI'
+      notificationCount: 0
     },
     stats: [],
     jobs: [],

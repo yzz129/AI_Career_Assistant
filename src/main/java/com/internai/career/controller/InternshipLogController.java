@@ -39,8 +39,8 @@ public class InternshipLogController {
     }
 
     @GetMapping("/my")
-    public Result<Page<InternshipLog>> my(@RequestParam(defaultValue = "1") long pageNum,
-                                          @RequestParam(defaultValue = "10") long pageSize) {
+    public Result<Page<InternshipLog>> my(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                          @RequestParam(name = "pageSize", defaultValue = "10") long pageSize) {
         roleGuard.require("STUDENT");
         Long studentId = studentService.currentStudent().getId();
         return Result.ok(service.page(new Page<>(pageNum, pageSize), new LambdaQueryWrapper<InternshipLog>()
@@ -49,8 +49,8 @@ public class InternshipLogController {
     }
 
     @GetMapping("/todo")
-    public Result<Page<InternshipLog>> todo(@RequestParam(defaultValue = "1") long pageNum,
-                                            @RequestParam(defaultValue = "10") long pageSize) {
+    public Result<Page<InternshipLog>> todo(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                            @RequestParam(name = "pageSize", defaultValue = "10") long pageSize) {
         roleGuard.require("TEACHER", "ADMIN");
         LambdaQueryWrapper<InternshipLog> wrapper = new LambdaQueryWrapper<InternshipLog>().orderByDesc(InternshipLog::getLogDate);
         if ("TEACHER".equals(LoginUserContext.get().roleCode())) {

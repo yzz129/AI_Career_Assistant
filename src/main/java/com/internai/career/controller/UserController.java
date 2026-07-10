@@ -20,10 +20,10 @@ public class UserController {
     }
 
     @GetMapping("/page")
-    public Result<Page<SysUser>> page(@RequestParam(defaultValue = "1") long pageNum,
-                                      @RequestParam(defaultValue = "10") long pageSize,
-                                      @RequestParam(required = false) String keyword,
-                                      @RequestParam(required = false) String roleCode) {
+    public Result<Page<SysUser>> page(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                      @RequestParam(name = "pageSize", defaultValue = "10") long pageSize,
+                                      @RequestParam(name = "keyword", required = false) String keyword,
+                                      @RequestParam(name = "roleCode", required = false) String roleCode) {
         roleGuard.require("ADMIN");
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
                 .like(keyword != null && !keyword.isBlank(), SysUser::getUsername, keyword)

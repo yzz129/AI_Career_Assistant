@@ -81,6 +81,9 @@ CREATE TABLE job_position (
   salary_range VARCHAR(80),
   skill_keyword VARCHAR(300),
   description TEXT,
+  source_name VARCHAR(80),
+  source_url VARCHAR(500),
+  source_checked_at DATE,
   status VARCHAR(20) DEFAULT 'OPEN',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -167,13 +170,14 @@ INSERT INTO student(id, user_id, student_no, name, major, grade, teacher_id, ski
 (1, 3, 'S2026001', '李同学', '软件工程', '2023级', 1, 'Java, Spring Boot, Vue, MySQL, AI 应用开发', '杭州 / 上海');
 
 INSERT INTO company(id, company_name, industry, city, contact_name, contact_phone, description) VALUES
-(1, '星芽科技有限公司', '人工智能 / 企业服务', '杭州', '陈 HR', '0571-88880001', '专注 AI 办公与校园数字化产品。'),
-(2, '云桥软件工作室', '软件开发', '上海', '赵经理', '021-66660002', '为中小企业提供 Web 与数据应用开发服务。');
+(1, '云智迪', '计算机软件', '杭州', NULL, NULL, 'BOSS 直聘公开岗位页面中的招聘企业。'),
+(2, '杭州十五分钟文化传媒', '文化传媒 / AI 内容', '杭州', NULL, NULL, 'BOSS 直聘公开岗位页面中的招聘企业。'),
+(3, '幻量科技', '软件开发 / 人工智能', '上海', NULL, NULL, 'BOSS 直聘公开岗位页面中的招聘企业。');
 
-INSERT INTO job_position(company_id, company_name, title, city, salary_range, skill_keyword, description, status) VALUES
-(1, '星芽科技有限公司', 'Java 后端实习生', '杭州', '180-220/天', 'Java, Spring Boot, MyBatis-Plus, MySQL', '参与就业服务平台后端接口开发、接口联调与基础 AI 能力接入。', 'OPEN'),
-(1, '星芽科技有限公司', 'AI 应用开发实习生', '杭州', '200-260/天', 'Prompt, SSE, Vue, Java', '参与 AI 问答、简历优化、知识库检索等应用功能开发。', 'OPEN'),
-(2, '云桥软件工作室', 'Vue 前端实习生', '上海', '160-220/天', 'Vue 3, Vite, Element Plus, Axios', '负责业务页面开发、组件封装和交互优化。', 'OPEN');
+INSERT INTO job_position(company_id, company_name, title, city, salary_range, skill_keyword, description, source_name, source_url, source_checked_at, status) VALUES
+(1, '云智迪', 'Java 后端开发实习生', '杭州', '200-300元/天', 'Java, 后端开发, 系统优化', '参与 Java 后端模块开发、代码质量保障及现有系统的稳定性优化。岗位事实依据公开招聘页概括整理。', 'BOSS直聘', 'https://www.zhipin.com/job_detail/a358b65018bf840503J53dy5GVVV.html', '2026-07-10', 'OPEN'),
+(2, '杭州十五分钟文化传媒', 'AI 应用开发工程师', '杭州西湖区', '300-350元/天', 'Python, AI 应用, 自动化', '参与 AI 视频内容生产自动化与相关应用开发。岗位事实依据公开招聘页概括整理。', 'BOSS直聘', 'https://m.zhipin.com/job_detail/1f2962417c43c8510nZ73NW1FVpV.html', '2026-07-10', 'OPEN'),
+(3, '幻量科技', '前端实习生', '上海浦东新区', '200-300元/天', 'Vue 3, 前端开发, 接口联调', '参与线上前端项目维护和功能迭代，使用 Vue 3 完成页面开发及接口联调。岗位事实依据公开招聘页概括整理。', 'BOSS直聘', 'https://m.zhipin.com/job_detail/6c7bc3f76e5d505d1HF409i1FVJZ.html', '2026-07-10', 'OPEN');
 
 INSERT INTO resume(student_id, title, content, version) VALUES
 (1, '李同学的后端实习简历', '教育背景：软件工程专业。项目经历：InternAI Career Assistant，负责 Spring Boot 接口、JWT 鉴权、Vue 页面联调。技能：Java、Spring Boot、MySQL、Vue。求职方向：Java 后端 / AI 应用开发。', 1);

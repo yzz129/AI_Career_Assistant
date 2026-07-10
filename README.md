@@ -1,6 +1,6 @@
 # InternAI Career Assistant / AI 实习就业助手系统
 
-一个用于实训答辩演示的前后端分离项目：后端使用 Spring Boot 3 + JDK 17 + MyBatis-Plus + MySQL + JWT，前端使用 Vue 3 + Vite + Element Plus + Pinia + Vue Router。系统默认开启 AI mock 模式，可直接演示 SSE 流式输出。
+一个用于实训答辩演示的前后端分离项目：后端使用 Spring Boot 3 + JDK 17 + MyBatis-Plus + MySQL + JWT，前端使用 Vue 3 + Vite + Element Plus + Pinia + Vue Router。系统已接入 DeepSeek V4 Flash；未配置 API Key 时自动回退到 AI Mock 模式，仍可演示 SSE 流式输出。
 
 ## 项目结构
 
@@ -17,7 +17,7 @@
 
 - 后端：Spring Boot 3.3.5、JDK 17、Maven、MyBatis-Plus、MySQL 8、JWT、Spring Validation、SSE
 - 前端：Vue 3、Vite、Element Plus、Axios、Pinia、Vue Router
-- AI：OpenAI 兼容接口封装，支持 DeepSeek / 通义千问 / 智谱等兼容 Chat Completions 的模型；默认 `ai.mock=true`
+- AI：DeepSeek OpenAI 兼容接口，默认模型 `deepseek-v4-flash`；关闭思考模式并限制最大输出，以降低 Token 成本
 
 ## 数据库导入
 
@@ -75,27 +75,35 @@ npm run build
 
 ## AI 配置
 
-默认 mock 模式，不需要 API Key：
+默认使用 DeepSeek 当前价格最低的正式模型 `deepseek-v4-flash`。API Key 只从环境变量读取，不要写入配置文件或提交到 Git：
 
 ```yaml
 ai:
-  api-key:
-  base-url: https://api.openai.com/v1
-  model: gpt-4o-mini
-  mock: true
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+  model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+  mock: ${AI_MOCK:false}
+  thinking-enabled: ${DEEPSEEK_THINKING_ENABLED:false}
+  max-tokens: ${DEEPSEEK_MAX_TOKENS:1024}
 ```
 
-如需接入 DeepSeek、通义千问、智谱等 OpenAI 兼容接口：
+Windows PowerShell 启动示例：
 
-```yaml
-ai:
-  api-key: 你的 API Key
-  base-url: 兼容接口地址，例如 https://api.deepseek.com/v1
-  model: deepseek-chat
-  mock: false
+```powershell
+$env:DEEPSEEK_API_KEY="你的 DeepSeek API Key"
+mvn spring-boot:run
 ```
 
-敏感配置都在 [application.yml](/d:/Idea/AI_Career_Assistant/src/main/resources/application.yml:1) 中，不在代码中硬编码。
+Linux / macOS 启动示例：
+
+```bash
+export DEEPSEEK_API_KEY="你的 DeepSeek API Key"
+mvn spring-boot:run
+```
+
+设置 `DEEPSEEK_API_KEY` 且没有强制开启 `AI_MOCK` 时，系统调用真实 DeepSeek；未设置 Key 时自动回退到 Mock。需要强制演示 Mock 时可设置 `AI_MOCK=true`。
+
+为降低费用，默认明确设置 `thinking.type=disabled`，并将单次生成上限设为 1024 Token。可通过 `DEEPSEEK_THINKING_ENABLED` 和 `DEEPSEEK_MAX_TOKENS` 环境变量调整。敏感 Key 不在代码或配置文件中硬编码。
 
 ## 核心接口
 

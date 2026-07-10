@@ -20,12 +20,12 @@ public class JobPositionController {
     }
 
     @GetMapping("/page")
-    public Result<Page<JobPosition>> page(@RequestParam(defaultValue = "1") long pageNum,
-                                          @RequestParam(defaultValue = "10") long pageSize,
-                                          @RequestParam(required = false) String title,
-                                          @RequestParam(required = false) String city,
-                                          @RequestParam(required = false) String skillKeyword,
-                                          @RequestParam(required = false) String status) {
+    public Result<Page<JobPosition>> page(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                          @RequestParam(name = "pageSize", defaultValue = "10") long pageSize,
+                                          @RequestParam(name = "title", required = false) String title,
+                                          @RequestParam(name = "city", required = false) String city,
+                                          @RequestParam(name = "skillKeyword", required = false) String skillKeyword,
+                                          @RequestParam(name = "status", required = false) String status) {
         roleGuard.require("ADMIN", "TEACHER", "STUDENT");
         LambdaQueryWrapper<JobPosition> wrapper = new LambdaQueryWrapper<JobPosition>()
                 .like(title != null && !title.isBlank(), JobPosition::getTitle, title)

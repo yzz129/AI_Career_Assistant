@@ -16,6 +16,17 @@
         </div>
         <h3>{{ job.title }}</h3>
         <p>{{ job.companyName }}</p>
+        <a
+          v-if="job.sourceUrl"
+          class="job-source-link"
+          :href="job.sourceUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Link />
+          {{ job.sourceName || '查看岗位来源' }}
+          <small v-if="job.sourceCheckedAt">{{ job.sourceCheckedAt }} 核验</small>
+        </a>
         <div class="chips">
           <em v-for="skill in splitSkills(job.skillKeyword)" :key="skill">{{ skill }}</em>
         </div>
@@ -37,6 +48,9 @@
         <el-form-item label="城市"><el-input v-model="form.city" /></el-form-item>
         <el-form-item label="薪资"><el-input v-model="form.salaryRange" /></el-form-item>
         <el-form-item label="技能关键词"><el-input v-model="form.skillKeyword" /></el-form-item>
+        <el-form-item label="岗位来源"><el-input v-model="form.sourceName" placeholder="例如：BOSS直聘" /></el-form-item>
+        <el-form-item label="来源链接"><el-input v-model="form.sourceUrl" placeholder="https://www.zhipin.com/job_detail/..." /></el-form-item>
+        <el-form-item label="来源核验日期"><el-date-picker v-model="form.sourceCheckedAt" type="date" value-format="YYYY-MM-DD" /></el-form-item>
         <el-form-item label="状态"><el-input v-model="form.status" /></el-form-item>
         <el-form-item label="描述"><el-input v-model="form.description" type="textarea" :rows="4" /></el-form-item>
       </el-form>
@@ -52,6 +66,7 @@
 import { nextTick, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Link } from '@element-plus/icons-vue'
 import { createApi, deleteApi, pageApi, submitApply, updateApi } from '../api'
 import { useAuthStore } from '../store/auth'
 
@@ -92,6 +107,9 @@ function open(row) {
 async function save() {
   if (!String(form.companyId || '').trim()) return ElMessage.warning('请填写企业 ID')
   if (!String(form.title || '').trim()) return ElMessage.warning('请填写岗位名称')
+  if (form.sourceUrl && !/^https:\/\/(www\.|m\.)?zhipin\.com\//.test(form.sourceUrl)) {
+    return ElMessage.warning('来源链接必须是 BOSS 直聘的 HTTPS 地址')
+  }
   if (form.id) await updateApi('/jobs', form.id, form)
   else await createApi('/jobs', form)
   dialogVisible.value = false

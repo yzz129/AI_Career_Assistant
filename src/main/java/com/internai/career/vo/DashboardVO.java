@@ -23,7 +23,6 @@ public class DashboardVO {
         private String major;
         private String season;
         private Integer notificationCount;
-        private String avatarText;
     }
 
     @Data
@@ -41,10 +40,14 @@ public class DashboardVO {
         private String company;
         private String title;
         private String city;
+        private String salaryRange;
         private List<String> tags = new ArrayList<>();
         private String match;
         private String logo;
         private String logoClass;
+        private String sourceName;
+        private String sourceUrl;
+        private String sourceCheckedAt;
     }
 
     @Data

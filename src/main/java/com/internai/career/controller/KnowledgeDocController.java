@@ -20,9 +20,9 @@ public class KnowledgeDocController {
     }
 
     @GetMapping("/page")
-    public Result<Page<KnowledgeDoc>> page(@RequestParam(defaultValue = "1") long pageNum,
-                                           @RequestParam(defaultValue = "10") long pageSize,
-                                           @RequestParam(required = false) String keyword) {
+    public Result<Page<KnowledgeDoc>> page(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                           @RequestParam(name = "pageSize", defaultValue = "10") long pageSize,
+                                           @RequestParam(name = "keyword", required = false) String keyword) {
         roleGuard.require("ADMIN", "TEACHER", "STUDENT");
         return Result.ok(service.page(new Page<>(pageNum, pageSize), new LambdaQueryWrapper<KnowledgeDoc>()
                 .like(keyword != null && !keyword.isBlank(), KnowledgeDoc::getTitle, keyword)

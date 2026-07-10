@@ -40,8 +40,8 @@ public class InternshipApplyController {
     }
 
     @GetMapping("/my")
-    public Result<Page<InternshipApply>> my(@RequestParam(defaultValue = "1") long pageNum,
-                                            @RequestParam(defaultValue = "10") long pageSize) {
+    public Result<Page<InternshipApply>> my(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                            @RequestParam(name = "pageSize", defaultValue = "10") long pageSize) {
         roleGuard.require("STUDENT");
         Long studentId = studentService.currentStudent().getId();
         return Result.ok(service.page(new Page<>(pageNum, pageSize), new LambdaQueryWrapper<InternshipApply>()
@@ -50,8 +50,8 @@ public class InternshipApplyController {
     }
 
     @GetMapping("/todo")
-    public Result<Page<InternshipApply>> todo(@RequestParam(defaultValue = "1") long pageNum,
-                                              @RequestParam(defaultValue = "10") long pageSize) {
+    public Result<Page<InternshipApply>> todo(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                              @RequestParam(name = "pageSize", defaultValue = "10") long pageSize) {
         roleGuard.require("TEACHER", "ADMIN");
         LambdaQueryWrapper<InternshipApply> wrapper = new LambdaQueryWrapper<InternshipApply>().orderByDesc(InternshipApply::getApplyTime);
         if ("TEACHER".equals(LoginUserContext.get().roleCode())) {

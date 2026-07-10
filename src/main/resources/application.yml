@@ -26,7 +26,9 @@ jwt:
   expire-hours: 24
 
 ai:
-  api-key:
-  base-url: https://api.openai.com/v1
-  model: gpt-4o-mini
-  mock: true
+  api-key: sk-4b8d9a8b0e7c49939807eb0c02bea494
+  base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+  model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+  mock: ${AI_MOCK:false}
+  thinking-enabled: ${DEEPSEEK_THINKING_ENABLED:false}
+  max-tokens: ${DEEPSEEK_MAX_TOKENS:1024}

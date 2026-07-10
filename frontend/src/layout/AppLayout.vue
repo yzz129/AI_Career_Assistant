@@ -16,11 +16,6 @@
         </RouterLink>
       </nav>
 
-      <button class="logout-button" type="button" @click="logout">
-        <SwitchButton />
-        <span>退出登录</span>
-      </button>
-
       <div class="sidebar-note">
         <div class="tiny-mascot sidebar-mascot">
           <span class="sprout"></span>
@@ -40,6 +35,12 @@
     </aside>
 
     <main class="main">
+      <header class="app-topbar">
+        <button class="topbar-logout" type="button" aria-label="退出登录" @click="logout">
+          <SwitchButton />
+          <span>退出登录</span>
+        </button>
+      </header>
       <RouterView />
     </main>
   </div>

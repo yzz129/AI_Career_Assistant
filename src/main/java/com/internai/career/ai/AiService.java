@@ -7,6 +7,8 @@ import com.internai.career.service.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class AiService {
+    private static final Logger log = LoggerFactory.getLogger(AiService.class);
     private final boolean mock;
     private final OpenAiCompatibleClient client;
     private final ResumeService resumeService;
@@ -34,7 +37,7 @@ public class AiService {
                      KnowledgeDocService knowledgeDocService,
                      AiChatSessionService sessionService,
                      AiChatMessageService messageService) {
-        this.mock = mock;
+        this.mock = mock || !client.isConfigured();
         this.client = client;
         this.resumeService = resumeService;
         this.studentService = studentService;
@@ -43,6 +46,11 @@ public class AiService {
         this.knowledgeDocService = knowledgeDocService;
         this.sessionService = sessionService;
         this.messageService = messageService;
+        if (this.mock) {
+            log.warn("AI 当前使用 Mock 模式；设置 DEEPSEEK_API_KEY 后可启用 DeepSeek {}", client.getModel());
+        } else {
+            log.info("AI 已接入 DeepSeek 模型 {}", client.getModel());
+        }
     }
 
     public Flux<String> resumeOptimize(Long resumeId) {

@@ -59,19 +59,19 @@ public class DashboardController {
         Student student = findCurrentStudent(loginUser);
         Teacher teacher = findCurrentTeacher(loginUser);
         DashboardVO vo = new DashboardVO();
-        fillProfile(vo, loginUser, student, teacher);
 
         List<JobPosition> openJobs = jobPositionService.list(new LambdaQueryWrapper<JobPosition>()
                 .eq(JobPosition::getStatus, "OPEN")
                 .orderByDesc(JobPosition::getCreateTime)
                 .last("limit 12"));
         List<InternshipApply> applies = scopedApplies(loginUser, student, teacher);
+        fillProfile(vo, loginUser, student, teacher, applies);
         Resume resume = findResume(student);
         List<KnowledgeDoc> docs = knowledgeDocService.list(new LambdaQueryWrapper<KnowledgeDoc>()
                 .orderByDesc(KnowledgeDoc::getUpdateTime)
                 .last("limit 6"));
 
-        fillStats(vo, openJobs, applies, resume);
+        fillStats(vo, openJobs, applies, student);
         fillJobs(vo, openJobs, student);
         fillProcess(vo, applies);
         fillResume(vo, resume);
@@ -94,7 +94,11 @@ public class DashboardController {
         return teacherService.getOne(new LambdaQueryWrapper<Teacher>().eq(Teacher::getUserId, loginUser.userId()), false);
     }
 
-    private void fillProfile(DashboardVO vo, LoginUser loginUser, Student student, Teacher teacher) {
+    private void fillProfile(DashboardVO vo,
+                             LoginUser loginUser,
+                             Student student,
+                             Teacher teacher,
+                             List<InternshipApply> applies) {
         String realName = loginUser.realName();
         String major = switch (loginUser.roleCode()) {
             case "STUDENT" -> student == null ? "学生用户" : safe(student.getMajor(), "学生用户");
@@ -106,9 +110,11 @@ public class DashboardController {
         profile.setMajor(major);
         profile.setGreeting("早上好，" + realName);
         profile.setSubtitle("AI 实习就业助手为你提供智能化的职业探索与求职支持");
-        profile.setSeason("2026 春招季");
-        profile.setNotificationCount(3);
-        profile.setAvatarText("STUDENT".equals(loginUser.roleCode()) ? "👨🏻‍🎓" : "TEACHER".equals(loginUser.roleCode()) ? "👩🏻‍🏫" : "AI");
+        profile.setSeason("2026 秋招季");
+        long notificationCount = "STUDENT".equals(loginUser.roleCode())
+                ? applies.stream().filter(apply -> !"PENDING".equals(apply.getStatus())).count()
+                : applies.stream().filter(apply -> "PENDING".equals(apply.getStatus())).count();
+        profile.setNotificationCount(Math.toIntExact(notificationCount));
     }
 
     private List<InternshipApply> scopedApplies(LoginUser loginUser, Student student, Teacher teacher) {
@@ -130,13 +136,17 @@ public class DashboardController {
         return resumeService.getOne(wrapper, false);
     }
 
-    private void fillStats(DashboardVO vo, List<JobPosition> openJobs, List<InternshipApply> applies, Resume resume) {
+    private void fillStats(DashboardVO vo,
+                           List<JobPosition> openJobs,
+                           List<InternshipApply> applies,
+                           Student student) {
         long pendingCount = applies.stream().filter(apply -> "PENDING".equals(apply.getStatus())).count();
-        long interviewCount = applies.stream().filter(apply -> "APPROVED".equals(apply.getStatus())).count();
+        long approvedCount = applies.stream().filter(apply -> "APPROVED".equals(apply.getStatus())).count();
+        int bestMatch = openJobs.stream().mapToInt(job -> matchScore(job, student)).max().orElse(0);
         vo.getStats().add(stat("jobs", String.valueOf(openJobs.size()), "推荐岗位", "数据库开放岗位", "teal"));
         vo.getStats().add(stat("apply", String.valueOf(applies.size()), "我的申请", "待处理 <b class=\"red\">" + pendingCount + "</b>", "coral"));
-        vo.getStats().add(stat("interview", String.valueOf(interviewCount), "面试机会", interviewCount > 0 ? "可推进 " + interviewCount + " 场" : "暂无已通过申请", "yellow"));
-        vo.getStats().add(stat("match", String.valueOf(resumeScore(resume)), "匹配度得分", "基于简历与岗位 <b class=\"green\">●</b>", "blue"));
+        vo.getStats().add(stat("interview", String.valueOf(approvedCount), "已通过申请", approvedCount > 0 ? "已通过 " + approvedCount + " 份" : "暂无已通过申请", "yellow"));
+        vo.getStats().add(stat("match", bestMatch + "%", "最高岗位匹配度", student == null ? "需关联学生档案" : "基于技能与意向城市", "blue"));
     }
 
     private DashboardVO.StatItem stat(String key, String value, String label, String sub, String color) {
@@ -157,10 +167,14 @@ public class DashboardController {
             item.setCompany(safe(job.getCompanyName(), "未填写企业"));
             item.setTitle(safe(job.getTitle(), "未填写岗位"));
             item.setCity(safe(job.getCity(), "待定"));
+            item.setSalaryRange(safe(job.getSalaryRange(), "薪资面议"));
             item.setTags(splitTags(job.getSkillKeyword()));
-            item.setMatch(matchScore(job, student, i) + "%");
+            item.setMatch(matchScore(job, student) + "%");
             item.setLogo(companyLogo(job.getCompanyName()));
             item.setLogoClass("logo-" + ((i % 3) + 1));
+            item.setSourceName(safe(job.getSourceName(), "未标注来源"));
+            item.setSourceUrl(job.getSourceUrl());
+            item.setSourceCheckedAt(job.getSourceCheckedAt() == null ? "" : job.getSourceCheckedAt().toString());
             vo.getJobs().add(item);
         }
     }
@@ -175,17 +189,22 @@ public class DashboardController {
                 .collect(Collectors.toList());
     }
 
-    private int matchScore(JobPosition job, Student student, int index) {
-        int base = 88 - index * 2;
+    private int matchScore(JobPosition job, Student student) {
         if (student == null || student.getSkills() == null || job.getSkillKeyword() == null) {
-            return base;
+            return 0;
         }
+        List<String> jobTags = splitTags(job.getSkillKeyword());
         String skills = student.getSkills().toLowerCase(Locale.ROOT);
-        long matched = splitTags(job.getSkillKeyword()).stream()
+        long matched = jobTags.stream()
                 .map(tag -> tag.toLowerCase(Locale.ROOT))
                 .filter(skills::contains)
                 .count();
-        return Math.min(98, base + (int) matched * 3);
+        int skillScore = jobTags.isEmpty() ? 0 : (int) Math.round(matched * 80.0 / jobTags.size());
+        String intentionCity = safe(student.getIntentionCity(), "").toLowerCase(Locale.ROOT);
+        String jobCity = safe(job.getCity(), "").toLowerCase(Locale.ROOT);
+        String cityPrefix = jobCity.length() >= 2 ? jobCity.substring(0, 2) : jobCity;
+        int cityScore = !cityPrefix.isBlank() && intentionCity.contains(cityPrefix) ? 20 : 0;
+        return Math.min(100, skillScore + cityScore);
     }
 
     private String companyLogo(String companyName) {

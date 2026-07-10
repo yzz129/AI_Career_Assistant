@@ -20,9 +20,9 @@ public class StudentController {
     }
 
     @GetMapping("/page")
-    public Result<Page<Student>> page(@RequestParam(defaultValue = "1") long pageNum,
-                                      @RequestParam(defaultValue = "10") long pageSize,
-                                      @RequestParam(required = false) String keyword) {
+    public Result<Page<Student>> page(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                      @RequestParam(name = "pageSize", defaultValue = "10") long pageSize,
+                                      @RequestParam(name = "keyword", required = false) String keyword) {
         roleGuard.require("ADMIN", "TEACHER");
         return Result.ok(service.page(new Page<>(pageNum, pageSize), new LambdaQueryWrapper<Student>()
                 .like(keyword != null && !keyword.isBlank(), Student::getName, keyword)

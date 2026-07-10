@@ -20,9 +20,9 @@ public class CompanyController {
     }
 
     @GetMapping("/page")
-    public Result<Page<Company>> page(@RequestParam(defaultValue = "1") long pageNum,
-                                      @RequestParam(defaultValue = "10") long pageSize,
-                                      @RequestParam(required = false) String companyName) {
+    public Result<Page<Company>> page(@RequestParam(name = "pageNum", defaultValue = "1") long pageNum,
+                                      @RequestParam(name = "pageSize", defaultValue = "10") long pageSize,
+                                      @RequestParam(name = "companyName", required = false) String companyName) {
         roleGuard.require("ADMIN", "TEACHER", "STUDENT");
         return Result.ok(service.page(new Page<>(pageNum, pageSize), new LambdaQueryWrapper<Company>()
                 .like(companyName != null && !companyName.isBlank(), Company::getCompanyName, companyName)
