@@ -1673,6 +1673,29 @@ a {
   color: var(--muted);
 }
 
+.register-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+
+.register-email { grid-column: 1 / -1; }
+
+.auth-switch {
+  width: 100%;
+  margin-top: 16px;
+  border: 0;
+  background: transparent;
+  color: var(--teal);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 620px) {
+  .register-grid { grid-template-columns: 1fr; }
+  .register-email { grid-column: auto; }
+}
+
 @media (max-width: 1180px) {
   .reference-dashboard {
     grid-template-columns: 1fr;
